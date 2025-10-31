@@ -48,6 +48,14 @@ $csvContent = $csvContent.Replace('"', '')
 Write-Host "Double quotes removed from '$fullExportPath'."
 # Write the modified content back to the CSV file
 Set-Content -Path $fullExportPath -Value $csvContent -Encoding UTF8
-Get-ChildItem -Path Exports:
+
+if (!(Test-Path -Path $fullExportPath)) {
+ Write-Error "Export failed. File '$fullExportPath' does not exist."
+ return
+}
+else {
+ Write-Host "Data successfully exported to '$fullExportPath'."
+}
+
 #cleanup
 Remove-PSDrive -Name Exports -Confirm:$false

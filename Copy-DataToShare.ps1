@@ -49,4 +49,5 @@ Write-Host "Double quotes removed from '$fullExportPath'."
 # Write the modified content back to the CSV file
 Set-Content -Path $fullExportPath -Value $csvContent -Encoding UTF8
 
+#cleanup
 Remove-PSDrive -Name Exports -Confirm:$false

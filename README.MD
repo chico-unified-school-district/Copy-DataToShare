@@ -1,102 +1,61 @@
-# Copy-DataToRemote
+# Copy-DataToShare.ps1
 
-## Overview
-
-**Copy-DataToRemote.ps1** is a PowerShell script template for automating the extraction of data from a SQL Server database and securely transferring the resulting file to a remote server via SFTP. This script is intended for vendor student data uploads and similar data transfer tasks.
-
----
-
-## Features
-
-- Extracts data from SQL Server using a custom query
-- Exports results to CSV and removes double quotes for compatibility
-- Securely transfers the file to a remote server via SFTP
-- Cleans up local export files after transfer
-- Modular functions for easy customization
-
----
+This PowerShell script exports data from a SQL Server database as a CSV file to a network share using provided credentials. It supports running a SQL query from a file or a direct statement.
 
 ## Prerequisites
 
 - PowerShell 5.1 or later
-- The following PowerShell modules:
-  - `CommonScriptFunctions` (for SQL operations)
-  - `dbatools` (for database connectivity)
-  - `Posh-SSH` (for SFTP file transfer)
-- Network access to both SQL Server and SFTP server
-- Appropriate credentials for SQL Server and SFTP
-
----
-
-## Usage
-
-1. **Prepare your SQL query** and save it as a `.sql` file.
-2. **Open PowerShell** and navigate to the script directory.
-3. **Run the script** with the required parameters:
-
-```powershell
-$sqlCred = Get-Credential -Message "Enter SQL Server credentials"
-$sftpCred = Get-Credential -Message "Enter SFTP credentials"
-
-.\Copy-DataToRemote.ps1 `
-    -SQLServer "sqlserver.example.com" `
-    -SQLDatabase "StudentDB" `
-    -SQLCredential $sqlCred `
-    -SQLQuery ".\sql\student_export.sql" `
-    -SftpServer "sftp.vendor.com" `
-    -SftpCredential $sftpCred `
-    -ExportName "students.csv" `
-    -RemoteDirectory "/incoming"
-```
-
----
+- `dbatools` PowerShell module
+- `CommonScriptFunctions` module (must provide `New-SqlOperation` and `Show-BlockInfo`)
+- Access to the target SQL Server and network share
 
 ## Parameters
 
-| Name              | Type                 | Description                              |
-| ----------------- | -------------------- | ---------------------------------------- |
-| `SQLServer`       | `string`             | SQL Server instance name or address      |
-| `SQLDatabase`     | `string`             | Name of the database to query            |
-| `SQLCredential`   | `PSCredential`       | SQL Server authentication credentials    |
-| `SQLQuery`        | `string` (file path) | Path to the SQL query file               |
-| `SftpServer`      | `string`             | SFTP server hostname or IP               |
-| `SftpCredential`  | `PSCredential`       | SFTP authentication credentials          |
-| `ExportName`      | `string`             | Name for the exported CSV file           |
-| `RemoteDirectory` | `string`             | Destination directory on the SFTP server |
-| `WhatIf`          | `switch` (optional)  | Preview actions without executing them   |
+| Name                | Type                   | Required | Description                                   |
+| ------------------- | ---------------------- | -------- | --------------------------------------------- |
+| `SQLServer`         | `string`               | Yes      | SQL Server instance name or address           |
+| `SQLDatabase`       | `string`               | Yes      | Name of the SQL database                      |
+| `SQLCredential`     | `PSCredential`         | Yes      | Credential for SQL Server authentication      |
+| `SQLQueryFile`      | `string`               | No       | Path to a file containing the SQL query       |
+| `SQLQueryStatement` | `string`               | No       | SQL query statement as a string               |
+| `SharePath`         | `string`               | Yes      | UNC path to the network share                 |
+| `ShareCredential`   | `PSCredential`         | Yes      | Credential for accessing the network share    |
+| `ExportName`        | `string`               | Yes      | Name of the exported CSV file                 |
+| `WhatIf`            | `switch` (alias: `wi`) | No       | Simulate the operation without making changes |
 
----
+**Note:** Either `SQLQueryFile` or `SQLQueryStatement` must be provided.
 
-## Process Flow
+## Usage
 
-1. **Imports required modules**
-2. **Creates a local `.\data\` directory** for exports
-3. **Reads and executes the SQL query**
-4. **Exports results to CSV and removes double quotes**
-5. **Transfers the file to the remote SFTP server**
-6. **Deletes the local export file after transfer**
+```powershell
+# Example usage
+$SqlCred = Get-Credential
+$ShareCred = Get-Credential
 
----
+.\Copy-DataToShare.ps1 `
+    -SQLServer "MyServer" `
+    -SQLDatabase "MyDatabase" `
+    -SQLCredential $SqlCred `
+    -SQLQueryFile "query.sql" `
+    -SharePath "\\server\share\folder" `
+    -ShareCredential $ShareCred `
+    -ExportName "ExportedData.csv"
+```
 
-## Security Notes
+## What It Does
 
-- Credentials are handled securely using PowerShell's `Get-Credential`.
-- SFTP transfers use port 22 and accept the host key automatically.
-- Local export files are deleted after transfer to minimize data exposure.
+1. Reads a SQL query from a file or direct input.
+2. Executes the query against the specified SQL Server database.
+3. Exports the result to the network share as a CSV file.
+4. Removes double quotes from the CSV content.
+5. Cleans up mapped drives.
 
----
+## Notes
 
-## Troubleshooting
+- Ensure you have the necessary permissions on both the SQL Server and the network share.
+- The script removes double quotes from the CSV output for compatibility with certain downstream processes.
+- The exported file is temporarily stored and then deleted after processing.
 
-- Ensure all required modules are installed and imported.
-- Verify network connectivity to both SQL Server and SFTP server.
-- Check permissions for both database access and SFTP upload.
-- Review error messages for details if the script fails.
+## License
 
----
-
-## Disclaimer
-
-This script is provided as a template and example. Please review and test thoroughly before using in production. Use at your own risk.
-
----
+MIT License or as specified by your organization.

@@ -41,13 +41,13 @@ New-PSDrive -Name Exports -PSProvider FileSystem -Root $SharePath -Credential $S
 
 $fullExportPath = (Join-Path -Path 'Exports:' -ChildPath $ExportName)
 
-Get-Data $sqlParams | Export-Csv -NoTypeInformation -Path $fullExportPath
+Get-Data $sqlParams $ExportName | Export-Csv -NoTypeInformation -Path $fullExportPath
 $csvContent = Get-Content -Path $fullExportPath -Raw
 # Remove double quotes from the CSV content
 $csvContent = $csvContent.Replace('"', '')
 Write-Host "Double quotes removed from '$fullExportPath'."
 # Write the modified content back to the CSV file
 Set-Content -Path $fullExportPath -Value $csvContent -Encoding UTF8
-
+Get-ChildItem -Path Exports:
 #cleanup
 Remove-PSDrive -Name Exports -Confirm:$false
